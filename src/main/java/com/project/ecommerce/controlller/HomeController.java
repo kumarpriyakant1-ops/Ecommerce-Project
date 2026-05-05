@@ -1,22 +1,31 @@
 package com.project.ecommerce.controlller;
 
-import com.project.ecommerce.dto.StatusResponse;
+import com.project.ecommerce.dto.StatusResponseDTO;
+import com.project.ecommerce.service.StatusService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.awt.image.PixelGrabber;
 
 @RestController
 @RequestMapping("/api")
 public class HomeController {
 
+    private  final StatusService statusService;
+
+    public HomeController(StatusService statusService) {
+        this.statusService = statusService;
+    }
+
     @GetMapping("/hello")
     public String hello() {
-        return "Hello, Backend is running 🚀";
+        return statusService.getHello();
     }
 
     @GetMapping("/status")
-    public StatusResponse status(){
-        return new StatusResponse("UP", "E-commerce backend");
+    public StatusResponseDTO status(){
+        return statusService.getStatus();
 
     }
 
