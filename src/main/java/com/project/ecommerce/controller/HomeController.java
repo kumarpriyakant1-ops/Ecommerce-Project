@@ -1,12 +1,10 @@
-package com.project.ecommerce.controlller;
+package com.project.ecommerce.controller;
 
 import com.project.ecommerce.dto.StatusResponseDTO;
 import com.project.ecommerce.service.StatusService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.awt.image.PixelGrabber;
 
 @RestController
 @RequestMapping("/api")
