@@ -4,6 +4,7 @@ import com.project.ecommerce.dto.UserDTO;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,6 +53,28 @@ public class UserController {
     public String deleteUser(@PathVariable Long id){
         userService.deleteUser(id);
         return "User deleted successfully";
+    }
+
+    @GetMapping("/paginated")
+    public Page<UserDTO> getPaginatedUsers(@RequestParam int page, @RequestParam int size){
+        return userService.getPaginatedUsers(page, size);
+    }
+
+    @GetMapping("/sorted")
+    public Page<UserDTO> getUsersSorted(@RequestParam int page,
+                                        @RequestParam int size, @RequestParam String sortBy){
+        return  userService.getUserSorted(page, size, sortBy);
+
+    }
+
+    @GetMapping("/search")
+    public List<UserDTO> searchUserByName(@RequestParam String name){
+        return userService.searchUserByName(name);
+    }
+
+    @GetMapping("/findByEmailAndUserName")
+    public List<UserDTO> findByEmailAndUserName(@RequestParam String name, @RequestParam String email){
+        return userService.findByEmailAndUserName(name, email);
     }
 
 }
