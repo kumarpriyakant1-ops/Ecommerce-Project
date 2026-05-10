@@ -7,7 +7,12 @@ import com.project.ecommerce.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -60,6 +65,28 @@ public class OrderService {
         logger.info("Fetching product: {}", product);
         return orderRepository.findByProductName(product)
                 .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public Page<OrderDTO> getPaginatedOrder(int page, int size) {
+        if(page < 0){
+            logger.warn("Invalid Page Number {}",page);
+            throw new IllegalArgumentException("Invalid Page Number {}" +page);
+        }
+        if(size < 0){
+            logger.warn("Invalid Size Number {}",size);
+            throw new IllegalArgumentException("Invalid Size Number {}" +size);
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Order> order = orderRepository.findAll(pageable);
+        return order.map(this::mapToDTO);    }
+
+
+    public List<OrderDTO> getSortedOrders(String sortBy) {
+        logger.info("Sorting orders by field: {}",sortBy);
+        List<Order> order = orderRepository.findAll(Sort.by(sortBy));
+        return order.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }

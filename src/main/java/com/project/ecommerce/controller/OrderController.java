@@ -2,9 +2,11 @@ package com.project.ecommerce.controller;
 
 import com.project.ecommerce.dto.ApiResponseDTO;
 import com.project.ecommerce.dto.OrderDTO;
+import com.project.ecommerce.dto.UserDTO;
 import com.project.ecommerce.entity.Order;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.service.OrderService;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -57,4 +59,24 @@ public class OrderController {
                 orders
         );
      }
+
+    @GetMapping("/paginated")
+    public ApiResponseDTO<Page<OrderDTO>> getPaginatedUsers(@RequestParam(defaultValue = "0") int page,
+                                                           @RequestParam(defaultValue = "5") int size){
+       Page<OrderDTO> order =orderService.getPaginatedOrder(page, size);
+
+       return new ApiResponseDTO<>(
+               "Order Fetched Successfully",
+               order
+       );
+    }
+
+    @GetMapping("/sorted")
+    public ApiResponseDTO<List<OrderDTO>> getSortedOrders(@RequestParam String sortBy){
+        List<OrderDTO> order =orderService.getSortedOrders(sortBy);
+        return new ApiResponseDTO<>(
+                "Order sorted Successfully",
+                order
+        );
+    }
 }
