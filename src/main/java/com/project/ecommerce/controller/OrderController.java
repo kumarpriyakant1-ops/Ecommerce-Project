@@ -1,10 +1,13 @@
 package com.project.ecommerce.controller;
 
+import com.project.ecommerce.dto.ApiResponseDTO;
 import com.project.ecommerce.dto.OrderDTO;
 import com.project.ecommerce.entity.Order;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.service.OrderService;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -16,7 +19,42 @@ public class OrderController {
     }
 
     @PostMapping("/user/{userId}")
-    public OrderDTO createOrder(@PathVariable Long userId, @RequestBody OrderDTO orderDTO){
-        return orderService.saveOrder(userId, orderDTO);
+    public ApiResponseDTO<OrderDTO>  createOrder(@PathVariable Long userId,
+                                                 @RequestBody OrderDTO orderDTO){
+        OrderDTO saveOrder = orderService.saveOrder(userId, orderDTO);
+        return new ApiResponseDTO<>(
+                "Order saved Successfully",
+                saveOrder
+        );
     }
+
+    @GetMapping("/price")
+    public ApiResponseDTO<List<OrderDTO>> findOrdersGreaterThan(@RequestParam Double price){
+        List<OrderDTO> orders = orderService.findOrdersGreaterThan(price);
+        if(orders.isEmpty()){
+            return new ApiResponseDTO<>(
+                    "No orders found greater tan price: " + price,
+                    orders
+            );
+        }
+        return new ApiResponseDTO<>(
+                "Order greater than price: " +price,
+                orders
+        );
+    }
+
+    @GetMapping("/product")
+    public ApiResponseDTO<List<OrderDTO>> findByProductName(@RequestParam String product){
+        List<OrderDTO> orders = orderService.findByProductName(product);
+        if(orders.isEmpty()){
+            return new ApiResponseDTO<>(
+                    "No orders found for product: " + product,
+                    orders
+            );
+        }
+        return new ApiResponseDTO<>(
+                "Orders fetched successfully",
+                orders
+        );
+     }
 }

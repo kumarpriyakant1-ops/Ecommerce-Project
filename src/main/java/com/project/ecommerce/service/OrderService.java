@@ -1,13 +1,15 @@
 package com.project.ecommerce.service;
-
 import com.project.ecommerce.dto.OrderDTO;
 import com.project.ecommerce.entity.Order;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.repository.OrderRepository;
 import com.project.ecommerce.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -21,6 +23,7 @@ public class OrderService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public OrderDTO saveOrder(Long userId, OrderDTO orderDTO) {
         logger.info("Creating order with User Id {}", userId);
         User user = userRepository.findById(userId)
@@ -43,5 +46,21 @@ public class OrderService {
                 order.getProductName(),
                 order.getPrice()
         );
+    }
+
+    public List<OrderDTO> findOrdersGreaterThan(Double price) {
+        logger.info("Fetching product greater than price : {}", price);
+        return orderRepository.findOrdersGreaterThan(price)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<OrderDTO> findByProductName(String product) {
+        logger.info("Fetching product: {}", product);
+        return orderRepository.findByProductName(product)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 }
