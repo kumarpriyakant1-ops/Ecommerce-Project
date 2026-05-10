@@ -60,7 +60,7 @@ public class UserService {
         return mapToDTO(user);
     }
 
-    public UserDTO updateUser(Long id, User userRequest) {
+    public UserDTO updateUser(Long id, UserDTO userDTO) {
         if (id < 0) {
             logger.warn("Id can not be negative {}", id);
             throw new IllegalArgumentException("Id cannot be negative");
@@ -70,8 +70,8 @@ public class UserService {
                     logger.error("User not found for update with id: {}", id);
                     return new RuntimeException("User not found with id: " + id);
                 });
-        user.setUserName(userRequest.getUserName());
-        user.setEmail(userRequest.getEmail());
+        user.setUserName(userDTO.getUserName());
+        user.setEmail(userDTO.getEmail());
         User updatedUser = userRepository.save(user);
         logger.info("User updated successfully with id: {}", id);
         return mapToDTO(updatedUser);
@@ -92,7 +92,7 @@ public class UserService {
 
     }
 
-    public UserDTO updatedUserPartially(Long id, User userRequest) {
+    public UserDTO updatedUserPartially(Long id, UserDTO userDTO) {
         if (id < 0) {
             logger.warn("Id can not be negative {}", id);
             throw new IllegalArgumentException("Id cannot be negative");
@@ -102,13 +102,16 @@ public class UserService {
                     logger.error("User not found with id: {}", id);
                     return new RuntimeException("User not found with id: " + id);
                 });
-        if(userRequest.getUserName()  != null){
-            user.setUserName(userRequest.getUserName());
+        if(userDTO.getUserName()  != null){
+            user.setUserName(userDTO.getUserName());
         }
-        if(userRequest.getEmail() != null){
-            user.setEmail(userRequest.getEmail());
+        if(userDTO.getEmail() != null){
+            user.setEmail(userDTO.getEmail());
         }
-        return mapToDTO(user);
+        User updatedUser = userRepository.save(user);
+
+        logger.info("User patched successfully with id: {}",id);
+        return mapToDTO(updatedUser);
     }
 
     public Page<UserDTO> getPaginatedUsers(int page, int size) {

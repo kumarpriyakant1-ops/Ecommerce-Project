@@ -20,7 +20,10 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser( @Valid @RequestBody User user){
+    public User createUser( @Valid @RequestBody UserDTO userDTO){
+        User user = new User();
+        user.setUserName(userDTO.getUserName());
+        user.setEmail(userDTO.getEmail());
         return userService.saveUser(user);
     }
 
@@ -39,13 +42,14 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public UserDTO updateUser(@PathVariable Long id, @Valid @RequestBody User userRequest){
-        return userService.updateUser(id, userRequest);
+    public UserDTO updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO userDTO){
+
+        return userService.updateUser(id, userDTO);
     }
 
     @PatchMapping("/{id}")
-    public  UserDTO updatedUserPartially(@PathVariable Long id, @RequestBody User userRequest){
-        return userService.updatedUserPartially(id, userRequest);
+    public  UserDTO updatedUserPartially(@PathVariable Long id, @RequestBody UserDTO userDto){
+        return userService.updatedUserPartially(id, userDto);
     }
 
 
