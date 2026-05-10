@@ -1,5 +1,6 @@
 package com.project.ecommerce.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,8 +13,12 @@ public class Order {
     @Id
     @GeneratedValue( strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String productName;
+
     private Double price;
+
+    @JsonBackReference
     @JoinColumn(name = "user_id")
     @ManyToOne
     private User user;
@@ -24,4 +29,10 @@ public class Order {
         this.price = price;
         this.user = user;
     }
+
+    public Order() {
+
+    }
+
+
 }
