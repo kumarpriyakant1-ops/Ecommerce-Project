@@ -1,6 +1,7 @@
 package com.project.ecommerce.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.project.ecommerce.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -24,6 +25,9 @@ public class User {
 
     @Column(unique = true)
     private String email;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     @JsonManagedReference
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

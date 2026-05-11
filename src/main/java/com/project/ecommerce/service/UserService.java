@@ -3,6 +3,7 @@ import com.project.ecommerce.dto.LoginRequestDTO;
 import com.project.ecommerce.dto.LoginResponseDTO;
 import com.project.ecommerce.dto.UserDTO;
 import com.project.ecommerce.entity.User;
+import com.project.ecommerce.enums.Role;
 import com.project.ecommerce.repository.UserRepository;
 import com.project.ecommerce.security.JwtService;
 import org.slf4j.Logger;
@@ -35,6 +36,7 @@ public class UserService {
         User user = new User();
         user.setUserName(userDTO.getUserName());
         user.setEmail(userDTO.getEmail());
+        user.setRole(Role.USER);
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         User saveUser = userRepository.save(user);
         logger.info("User created successfully {}", userDTO.getEmail());
