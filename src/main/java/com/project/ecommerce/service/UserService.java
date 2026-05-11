@@ -1,13 +1,17 @@
 package com.project.ecommerce.service;
+import com.project.ecommerce.dto.LoginRequestDTO;
+import com.project.ecommerce.dto.LoginResponseDTO;
 import com.project.ecommerce.dto.UserDTO;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.repository.UserRepository;
+import com.project.ecommerce.security.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,21 +19,50 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
 
+    private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
-    public UserService(UserRepository userRepository) {
+    public UserService(JwtService jwtService, UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.jwtService = jwtService;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public User saveUser(User user) {
-        logger.info("Creating user with email: {}", user.getEmail());
-        return userRepository.save(user);
+    public UserDTO saveUser(UserDTO userDTO) {
+        logger.info("Creating user with email: {}", userDTO.getEmail());
+        User user = new User();
+        user.setUserName(userDTO.getUserName());
+        user.setEmail(userDTO.getEmail());
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        User saveUser = userRepository.save(user);
+        logger.info("User created successfully {}", userDTO.getEmail());
+        return mapToDTO(saveUser);
     }
 
-    public List<User> saveAllUsers(List<User> users) {
-            return userRepository.saveAll(users);
+    public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
+        logger.info("Fetching User with Email: {}", loginRequestDTO.getEmail());
+        User user = userRepository.findByEmail(loginRequestDTO.getEmail())
+                .orElseThrow( () -> {
+                    logger.error("User not found with Email: {}", loginRequestDTO.getEmail());
+                    return new RuntimeException("User not found with Email: " + loginRequestDTO.getEmail());
+                });
+
+        boolean matches = passwordEncoder
+                .matches(loginRequestDTO.getPassword(), user.getPassword());
+        if(!matches){
+            logger.error("Password Invalid !");
+            throw new RuntimeException("Password Invalid !");
+        }
+
+        String token = jwtService.generateToken(user.getEmail());
+        logger.debug("Token generated successfully");
+        return new LoginResponseDTO(token);
     }
+
+
+
 
     private UserDTO mapToDTO(User  user){
         return new UserDTO(
@@ -166,4 +199,7 @@ public class UserService {
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
+
+
+
 }

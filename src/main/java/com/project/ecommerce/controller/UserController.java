@@ -1,10 +1,15 @@
 package com.project.ecommerce.controller;
 
+import com.project.ecommerce.dto.ApiResponseDTO;
+import com.project.ecommerce.dto.LoginRequestDTO;
+import com.project.ecommerce.dto.LoginResponseDTO;
 import com.project.ecommerce.dto.UserDTO;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,37 +24,52 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
-    public User createUser( @Valid @RequestBody UserDTO userDTO){
-        User user = new User();
-        user.setUserName(userDTO.getUserName());
-        user.setEmail(userDTO.getEmail());
-        return userService.saveUser(user);
+    @PostMapping("/signup")
+    public ApiResponseDTO<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO){
+        UserDTO saveUser = userService.saveUser(userDTO);
+        return new ApiResponseDTO<>(
+                "User Created Successfully",
+                saveUser
+        );
     }
 
-    @PostMapping("/batch")
-    public List<User> createUser(@RequestBody List<User> users){
-        return userService.saveAllUsers(users);
+    @PostMapping("/login")
+    public ApiResponseDTO<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO){
+        LoginResponseDTO response = userService.login(loginRequestDTO);
+        return new ApiResponseDTO<>(
+                "Login Successfully",
+                response
+        );
     }
-    @GetMapping
-    public List<UserDTO> getAllUsers(){
-        return userService.getAllUsers();
-    }
+
 
     @GetMapping("/{id}")
-    public UserDTO getUserById(@PathVariable Long id){
-        return userService.getUserById(id);
+    public ApiResponseDTO<UserDTO> getUserById(@PathVariable Long id){
+        UserDTO user = userService.getUserById(id);
+        return new ApiResponseDTO<>(
+                "User fetched successfully",
+                user
+        );
     }
 
     @PutMapping("/{id}")
-    public UserDTO updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO userDTO){
-
-        return userService.updateUser(id, userDTO);
+    public ApiResponseDTO<UserDTO> updateUser(@PathVariable Long id,
+                                              @Valid @RequestBody UserDTO userDTO){
+        UserDTO updatedUser = userService.updateUser(id, userDTO);
+        return new ApiResponseDTO<>(
+                "User Updated Successfully",
+                updatedUser
+        );
     }
 
     @PatchMapping("/{id}")
-    public  UserDTO updatedUserPartially(@PathVariable Long id, @RequestBody UserDTO userDto){
-        return userService.updatedUserPartially(id, userDto);
+    public  ApiResponseDTO<UserDTO> updatedUserPartially(@PathVariable Long id,
+                                                         @RequestBody UserDTO userDto){
+        UserDTO user = userService.updatedUserPartially(id, userDto);
+        return  new ApiResponseDTO<>(
+                "User updated successfully",
+                user
+        );
     }
 
 
@@ -60,25 +80,53 @@ public class UserController {
     }
 
     @GetMapping("/paginated")
-    public Page<UserDTO> getPaginatedUsers(@RequestParam int page, @RequestParam int size){
-        return userService.getPaginatedUsers(page, size);
+    public ApiResponseDTO<Page<UserDTO>> getPaginatedUsers(@RequestParam int page, @RequestParam int size){
+        Page<UserDTO> user =  userService.getPaginatedUsers(page, size);
+        return new ApiResponseDTO<>(
+                "User fetched successfully",
+                user
+        );
     }
 
     @GetMapping("/sorted")
-    public Page<UserDTO> getUsersSorted(@RequestParam int page,
+    public ApiResponseDTO<Page<UserDTO>> getUsersSorted(@RequestParam int page,
                                         @RequestParam int size, @RequestParam String sortBy){
-        return  userService.getUserSorted(page, size, sortBy);
+        Page<UserDTO> user = userService.getUserSorted(page, size, sortBy);
+        return new ApiResponseDTO<>(
+                "User fetched successfully",
+                user
+        );
 
     }
 
     @GetMapping("/search")
-    public List<UserDTO> searchUserByName(@RequestParam String name){
-        return userService.searchUserByName(name);
+    public ApiResponseDTO<List<UserDTO>> searchUserByName(@RequestParam String name){
+        List<UserDTO> users = userService.searchUserByName(name);
+        if(users.isEmpty()){
+            return new ApiResponseDTO<>(
+                    "No Users found by name: " +name,
+                    users
+            );
+        }
+        return new ApiResponseDTO<>(
+                "User fetched successfully",
+                users
+        );
     }
 
     @GetMapping("/findByEmailAndUserName")
-    public List<UserDTO> findByEmailAndUserName(@RequestParam String name, @RequestParam String email){
-        return userService.findByEmailAndUserName(name, email);
+    public ApiResponseDTO<List<UserDTO>> findByEmailAndUserName(@RequestParam String name, @RequestParam String email){
+        List<UserDTO> users =  userService.findByEmailAndUserName(name, email);
+        if(users.isEmpty()){
+            return new ApiResponseDTO<>(
+                    "No Users found",
+                    users
+            );
+        }
+        return new ApiResponseDTO<>(
+                "User fetched successfully",
+                users
+        );
     }
 
 }
