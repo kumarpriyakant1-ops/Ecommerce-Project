@@ -43,6 +43,14 @@ public class SecurityConfig {
                                 "/api/users/login",
                                 "/api/users/signup")
                         .permitAll()
+
+
+                        .requestMatchers("/api/admin/test")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers("/api/user/test")
+                        .hasAnyRole("USER", "ADMIN")
+
                         .anyRequest()
                         .authenticated()
                 )
