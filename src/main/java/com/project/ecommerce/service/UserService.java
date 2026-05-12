@@ -2,6 +2,7 @@ package com.project.ecommerce.service;
 import com.project.ecommerce.dto.LoginRequestDTO;
 import com.project.ecommerce.dto.LoginResponseDTO;
 import com.project.ecommerce.dto.UserDTO;
+import com.project.ecommerce.entity.RefreshToken;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.enums.Role;
 import com.project.ecommerce.repository.UserRepository;
@@ -23,12 +24,14 @@ public class UserService {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
-    public UserService(JwtService jwtService, UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(JwtService jwtService, UserRepository userRepository, PasswordEncoder passwordEncoder, RefreshTokenService refreshTokenService) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public UserDTO saveUser(UserDTO userDTO) {
@@ -42,7 +45,6 @@ public class UserService {
         logger.info("User created successfully {}", userDTO.getEmail());
         return mapToDTO(saveUser);
     }
-
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
         logger.info("Fetching User with Email: {}", loginRequestDTO.getEmail());
         User user = userRepository.findByEmail(loginRequestDTO.getEmail())
@@ -57,14 +59,13 @@ public class UserService {
             logger.error("Password Invalid !");
             throw new RuntimeException("Password Invalid !");
         }
-
-        String token = jwtService.generateToken(user.getEmail());
-        logger.debug("Token generated successfully");
-        return new LoginResponseDTO(token);
+//        String accessToken = jwtService.generateToken(user.getEmail());
+        String accessToken = jwtService.generateToken(user);
+        logger.debug("Access token generated successfully");
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+        logger.debug("Refresh token generated successfully");
+        return new LoginResponseDTO(accessToken, refreshToken.getToken());
     }
-
-
-
 
     private UserDTO mapToDTO(User  user){
         return new UserDTO(

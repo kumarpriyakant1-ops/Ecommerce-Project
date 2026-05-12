@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
-    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
 

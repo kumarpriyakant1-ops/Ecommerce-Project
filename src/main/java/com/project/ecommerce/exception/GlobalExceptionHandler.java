@@ -1,5 +1,8 @@
 package com.project.ecommerce.exception;
 import com.project.ecommerce.dto.ErrorResponseDTO;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -51,5 +54,40 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now()
         );
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<ErrorResponseDTO> handleExpiredJwtException(ExceptionHandler ex){
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                "TOKEN_401",
+                List.of("JWT token expired"),
+                HttpStatus.UNAUTHORIZED.value(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+    @ExceptionHandler(MalformedJwtException.class)
+    public ResponseEntity<ErrorResponseDTO> handleMalformedJwtException(MalformedJwtException ex){
+
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                "TOKEN_401",
+                        List.of("Invalid JWT token"),
+                        HttpStatus.UNAUTHORIZED.value(),
+                        LocalDateTime.now()
+                );
+
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(SignatureException.class)
+    public ResponseEntity<ErrorResponseDTO> handleSignatureException(SignatureException ex){
+        ErrorResponseDTO error =
+                new ErrorResponseDTO(
+                        "TOKEN_401",
+                        List.of("Invalid JWT signature"),
+                        HttpStatus.UNAUTHORIZED.value(),
+                        LocalDateTime.now()
+                );
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 }

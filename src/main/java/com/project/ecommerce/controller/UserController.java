@@ -1,15 +1,10 @@
 package com.project.ecommerce.controller;
 
-import com.project.ecommerce.dto.ApiResponseDTO;
-import com.project.ecommerce.dto.LoginRequestDTO;
-import com.project.ecommerce.dto.LoginResponseDTO;
-import com.project.ecommerce.dto.UserDTO;
-import com.project.ecommerce.entity.User;
+import com.project.ecommerce.dto.*;
+import com.project.ecommerce.service.RefreshTokenService;
 import com.project.ecommerce.service.UserService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,9 +14,11 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final RefreshTokenService refreshTokenService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, RefreshTokenService refreshTokenService) {
         this.userService = userService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @PostMapping("/signup")
@@ -42,7 +39,32 @@ public class UserController {
         );
     }
 
+    @PostMapping("/logout")
+    public ApiResponseDTO<RefreshTokenRequestDTO> login(@RequestBody RefreshTokenRequestDTO token ){
+        refreshTokenService.logout(token.getRefreshToken());
+        return new ApiResponseDTO<>(
+                "Logout Successfully",
+                null
+        );
+    }
 
+    @PostMapping("/refresh-token")
+    public ApiResponseDTO<String> refreshToken(@RequestParam String refreshTokenValue){
+        String accessToken = refreshTokenService.generateAccessToken(refreshTokenValue);
+        return new ApiResponseDTO<>(
+                "New access token generated",
+                accessToken
+        );
+    }
+
+    @PostMapping("/rotate-token")
+    public ApiResponseDTO<LoginResponseDTO> rotateToken(@RequestParam String refreshTokenValue){
+        LoginResponseDTO accessToken = refreshTokenService.rotateToken(refreshTokenValue);
+        return new ApiResponseDTO<>(
+                "Token rotated successfully",
+                accessToken
+        );
+    }
     @GetMapping("/{id}")
     public ApiResponseDTO<UserDTO> getUserById(@PathVariable Long id){
         UserDTO user = userService.getUserById(id);

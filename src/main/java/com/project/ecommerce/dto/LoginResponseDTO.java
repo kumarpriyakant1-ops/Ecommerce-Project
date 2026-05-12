@@ -6,12 +6,16 @@ import lombok.Setter;
 @Getter
 @Setter
 public class LoginResponseDTO {
-    private String token;
+    private String accessToken;
+
+    private String refreshToken;
+
 
     public LoginResponseDTO() {
     }
 
-    public LoginResponseDTO(String token) {
-        this.token = token;
+    public LoginResponseDTO(String accessToken, String refreshToken) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
     }
 }
