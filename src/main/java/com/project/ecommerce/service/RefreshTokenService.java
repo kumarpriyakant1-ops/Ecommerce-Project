@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -35,6 +36,8 @@ public class RefreshTokenService {
         logger.info("Successfully created the refresh token");
         return refreshTokenRepository.save(refreshToken);
     }
+
+    @Transactional
     public LoginResponseDTO rotateToken(String refreshTokenValue) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
                 .orElseThrow( () -> {
@@ -76,6 +79,7 @@ public class RefreshTokenService {
 
     }
 
+    @Transactional
     public void logout(String refreshToken) {
         refreshTokenRepository.deleteByToken(refreshToken);
         logger.info("Refresh token deleted successfully");
