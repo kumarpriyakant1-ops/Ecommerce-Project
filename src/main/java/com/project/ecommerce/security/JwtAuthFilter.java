@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -22,6 +21,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtService jwtService;
+
     @Autowired
     private UserRepository userRepository;
 
@@ -32,31 +32,47 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
-        // CHECK TOKEN EXISTS
-        String authHeader = request.getHeader("Authorization");
+        String authHeader =
+                request.getHeader("Authorization");
 
-        // REMOVE "Bearer"
-        if(authHeader != null && authHeader.startsWith("Bearer")){
+        // TOKEN EXISTS
+        if(authHeader != null
+                &&
+                authHeader.startsWith("Bearer ")) {
 
-            String token = authHeader.substring(7);
-            String email = jwtService.extractEmail(token);
+            // REMOVE Bearer
+            String token =
+                    authHeader.substring(7);
 
-            // FETCH USER FROM DATABASE
-            User user = userRepository.findByEmail(email)
-                            .orElseThrow(() -> new RuntimeException("User not found"));
+            String email =
+                    jwtService.extractEmail(token);
+
+            // FETCH USER
+            User user =
+                    userRepository.findByEmail(email)
+                            .orElseThrow(() ->
+                                    new RuntimeException(
+                                            "User not found"));
 
             // CREATE ROLE
-            List<SimpleGrantedAuthority> authorities = List.of(
-                    new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
-            );
+            List<SimpleGrantedAuthority> authorities =
+                    List.of(
+
+                            new SimpleGrantedAuthority(
+                                    "ROLE_"
+                                            + user.getRole().name())
+                    );
 
             // CREATE AUTH OBJECT
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(
+
                             email,
+
                             null,
-                            authorities);
-                            //Collections.emptyList());
+
+                            authorities
+                    );
 
             // SET AUTHENTICATION
             SecurityContextHolder
@@ -64,6 +80,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     .setAuthentication(auth);
         }
 
+        // CONTINUE REQUEST
         filterChain.doFilter(
                 request,
                 response);
