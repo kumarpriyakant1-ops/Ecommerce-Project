@@ -45,15 +45,32 @@ public class OrderService {
         return mapToDTO(saveOrder);
     }
 
+    public OrderDTO getOrderById(Long id) {
+        if (id < 0) {
+            logger.warn("Id can not be negative {}", id);
+            throw new IllegalArgumentException("Id cannot be negative");
+        }
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.error("Order is not found with id: {}", id);
+                    return new RuntimeException("Order is not found with id: " + id);
+                 });
+        logger.info("Order fetched successfully with id: {}", id);
+        return mapToDTO(order);
+
+    }
+
     private OrderDTO mapToDTO(Order order){
         return new OrderDTO(
                 order.getId(),
                 order.getProductName(),
-                order.getPrice()
+                order.getPrice(),
+                order.getCreatedAt(),
+                order.getUpdatedAt()
         );
     }
 
-    public List<OrderDTO> findOrdersGreaterThan(Double price) {
+    public List<OrderDTO> getOrdersByPriceGreaterThan(Double price) {
         logger.info("Fetching product greater than price : {}", price);
         return orderRepository.findOrdersGreaterThan(price)
                 .stream()
@@ -61,7 +78,7 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    public List<OrderDTO> findByProductName(String product) {
+    public List<OrderDTO> getOrdersByProductName(String product) {
         logger.info("Fetching product: {}", product);
         return orderRepository.findByProductName(product)
                 .stream()
@@ -69,7 +86,7 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
-    public Page<OrderDTO> getPaginatedOrder(int page, int size) {
+    public Page<OrderDTO> getPaginatedOrders(int page, int size) {
         if(page < 0){
             logger.warn("Invalid Page Number {}",page);
             throw new IllegalArgumentException("Invalid Page Number {}" +page);
@@ -79,7 +96,7 @@ public class OrderService {
             throw new IllegalArgumentException("Invalid Size Number {}" +size);
         }
         Pageable pageable = PageRequest.of(page, size);
-        Page<Order> order = orderRepository.findAll(pageable);
+        Page<Order> order = orderRepository.findByActiveTrue(pageable);
         return order.map(this::mapToDTO);    }
 
 
@@ -90,4 +107,36 @@ public class OrderService {
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
+
+    public void deleteOrder(Long id){
+        Order order = orderRepository.findById(id)
+                        .orElseThrow(() -> {
+                            logger.error("Order not fount with id: {}", id);
+                            return new RuntimeException("Order not found with id: " + id);
+                        });
+        order.setActive(false);
+        orderRepository.save(order);
+    }
+
+    public OrderDTO updateOrder(Long id, OrderDTO orderDTO) {
+        if (id < 0) {
+            logger.warn("Id can not be negative {}", id);
+            throw new IllegalArgumentException("Id cannot be negative");
+        }
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.error("Order not fount with id: {}", id);
+                    return new RuntimeException("Order not found with id: " + id);
+                });
+        if(!order.getActive()){
+            logger.warn("Order is inactive");
+            throw new RuntimeException("Order is inactive");
+        }
+        order.setProductName(orderDTO.getProductName());
+        order.setPrice(orderDTO.getPrice());
+        Order updatedOrder = orderRepository.save(order);
+        logger.info("Order updated successfully with id: {}", id);
+        return mapToDTO(updatedOrder);
+    }
+
 }

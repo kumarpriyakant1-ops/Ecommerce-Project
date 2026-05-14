@@ -74,7 +74,7 @@ public class UserController {
         );
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public ApiResponseDTO<UserDTO> updateUser(@PathVariable Long id,
                                               @Valid @RequestBody UserDTO userDTO){
         UserDTO updatedUser = userService.updateUser(id, userDTO);

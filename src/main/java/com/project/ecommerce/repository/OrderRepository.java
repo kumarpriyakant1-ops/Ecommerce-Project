@@ -3,6 +3,8 @@ package com.project.ecommerce.repository;
 import com.project.ecommerce.dto.OrderDTO;
 import com.project.ecommerce.entity.Order;
 import org.apache.logging.log4j.simple.internal.SimpleProvider;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -17,4 +19,6 @@ public interface OrderRepository extends JpaRepository<Order, Long > {
 
     @Query(value = "Select * from orders where product_name = :product", nativeQuery = true)
     List<Order> findByProductName(String product);
+
+    Page<Order> findByActiveTrue(Pageable pageable);
 }
