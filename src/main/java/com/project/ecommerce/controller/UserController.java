@@ -31,7 +31,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ApiResponseDTO<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO){
+    public ApiResponseDTO<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO){
         LoginResponseDTO response = userService.login(loginRequestDTO);
         return new ApiResponseDTO<>(
                 "Login Successfully",
@@ -40,7 +40,7 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ApiResponseDTO<RefreshTokenRequestDTO> login(@RequestBody RefreshTokenRequestDTO token ){
+    public ApiResponseDTO<RefreshTokenRequestDTO> logout(@Valid @RequestBody RefreshTokenRequestDTO token ){
         refreshTokenService.logout(token.getRefreshToken());
         return new ApiResponseDTO<>(
                 "Logout Successfully",
@@ -94,11 +94,13 @@ public class UserController {
         );
     }
 
-
     @DeleteMapping("/{id}")
-    public String deleteUser(@PathVariable Long id){
+    public ApiResponseDTO<String> deleteUser(@PathVariable Long id){
         userService.deleteUser(id);
-        return "User deleted successfully";
+        return new ApiResponseDTO<>(
+                "User deleted successfully",
+                null
+        );
     }
 
     @GetMapping("/paginated")

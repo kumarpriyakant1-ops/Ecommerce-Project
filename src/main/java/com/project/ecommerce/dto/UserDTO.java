@@ -14,9 +14,9 @@ public class UserDTO {
     @Size(min = 3, max = 50, message = "Username must be at least 3 characters")
     private String userName;
 
-   /* @NotBlank(message = "Password is required")
+    @NotBlank(message = "Password is required")
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private String password;*/
+    private String password;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")

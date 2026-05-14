@@ -151,13 +151,10 @@ public class UserService {
     }
 
     public Page<UserDTO> getPaginatedUsers(int page, int size) {
-        if(page < 0){
-            logger.warn("Invalid Page Number {}",page);
-            throw new IllegalArgumentException("Invalid Page Number {}" +page);
-        }
-        if(size < 0){
-            logger.warn("Invalid Size Number {}",size);
-            throw new IllegalArgumentException("Invalid Size Number {}" +size);
+
+        if (page < 0 || size <= 0 || size > 100) {
+            logger.warn("Invalid Page or size");
+            throw new IllegalArgumentException("Invalid page or size");
         }
         Pageable pageable = PageRequest.of(page, size);
         Page<User> userPage = userRepository.findAll(pageable);
@@ -165,13 +162,9 @@ public class UserService {
     }
 
     public Page<UserDTO> getUserSorted(int page, int size, String sortBy) {
-        if(page < 0){
-            logger.warn("Invalid Page Number {}",page);
-            throw new IllegalArgumentException("Invalid Page Number {}" +page);
-        }
-        if(size < 0){
-            logger.warn("Invalid Size Number {}",size);
-            throw new IllegalArgumentException("Invalid Size Number {}" +size);
+        if (page < 0 || size <= 0 || size > 100) {
+            logger.warn("Invalid Page or size");
+            throw new IllegalArgumentException("Invalid page or size");
         }
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
         return userRepository.findAll(pageable).map(this::mapToDTO);
