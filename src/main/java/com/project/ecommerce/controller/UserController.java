@@ -1,9 +1,11 @@
 package com.project.ecommerce.controller;
 
 import com.project.ecommerce.dto.*;
+import com.project.ecommerce.service.EmailService;
 import com.project.ecommerce.service.RefreshTokenService;
 import com.project.ecommerce.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +15,8 @@ import java.util.List;
 @RequestMapping("/api/users")
 public class UserController {
 
+    @Autowired
+    private EmailService emailService;
     private final UserService userService;
     private final RefreshTokenService refreshTokenService;
 
@@ -44,6 +48,26 @@ public class UserController {
         refreshTokenService.logout(token.getRefreshToken());
         return new ApiResponseDTO<>(
                 "Logout Successfully",
+                null
+        );
+    }
+
+    @GetMapping("/send-mail")
+    public ApiResponseDTO<String> sendEmail(@RequestParam String sentTo){
+        emailService.sendMail(
+                sentTo,
+                "Testing Mail Integration",
+                """
+                        Hi,
+                        
+                        Spring Boot Email is working fine.
+                        
+                        Thanks & regards
+                        Priyakant Kumar            """
+        );
+
+        return new ApiResponseDTO<>(
+                "Email sent successfully",
                 null
         );
     }

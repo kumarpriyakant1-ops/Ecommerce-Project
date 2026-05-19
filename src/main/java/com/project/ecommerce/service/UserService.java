@@ -9,10 +9,12 @@ import com.project.ecommerce.repository.UserRepository;
 import com.project.ecommerce.security.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -25,6 +27,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
+    @Autowired
+    private EmailService emailService;
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     public UserService(JwtService jwtService, UserRepository userRepository, PasswordEncoder passwordEncoder, RefreshTokenService refreshTokenService) {
@@ -43,6 +47,40 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         User saveUser = userRepository.save(user);
         logger.info("User created successfully {}", userDTO.getEmail());
+        try {
+
+            String emailBody = String.format("""
+                Dear %s,
+
+                Welcome to Ecommerce Platform!
+
+                Your account has been successfully registered with us.
+
+                You can now securely log in to the platform and access our services.
+
+                For security reasons, please do not share your login credentials with anyone.
+
+                If you have any questions or need assistance, feel free to contact our support team.
+
+                Thank you for choosing Ecommerce Platform.
+
+                Best regards,
+                Ecommerce Platform Team
+                """,
+
+                    saveUser.getUserName()
+            );
+            emailService.sendMail(
+                    saveUser.getEmail(),
+                    "Welcome to Ecommerce Platform",
+                    emailBody
+            );
+            logger.info("Welcome email sent successfully to {}", saveUser.getEmail()
+            );
+        } catch (Exception ex){
+            logger.error("Failed to send welcome email: {}", ex.getMessage()
+            );
+        }
         return mapToDTO(saveUser);
     }
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
