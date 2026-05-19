@@ -26,51 +26,38 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private UserRepository userRepository;
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
             throws ServletException, IOException {
 
-        String authHeader =
-                request.getHeader("Authorization");
+        String authHeader = request.getHeader("Authorization");
 
         // TOKEN EXISTS
-        if(authHeader != null
-                &&
-                authHeader.startsWith("Bearer ")) {
+        if(authHeader != null && authHeader.startsWith("Bearer ")) {
 
             // REMOVE Bearer
-            String token =
-                    authHeader.substring(7);
+            String token = authHeader.substring(7);
 
-            String email =
-                    jwtService.extractEmail(token);
+            String email = jwtService.extractEmail(token);
 
             // FETCH USER
-            User user =
-                    userRepository.findByEmail(email)
+            User user = userRepository.findByEmail(email)
                             .orElseThrow(() ->
-                                    new RuntimeException(
-                                            "User not found"));
+                                    new RuntimeException("User not found")
+                            );
 
             // CREATE ROLE
             List<SimpleGrantedAuthority> authorities =
-                    List.of(
-
-                            new SimpleGrantedAuthority(
-                                    "ROLE_"
-                                            + user.getRole().name())
+                    List.of(new SimpleGrantedAuthority(
+                            "ROLE_" + user.getRole().name())
                     );
 
             // CREATE AUTH OBJECT
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(
-
                             email,
-
                             null,
-
                             authorities
                     );
 

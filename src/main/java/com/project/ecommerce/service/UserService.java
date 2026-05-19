@@ -71,6 +71,7 @@ public class UserService {
         return new UserDTO(
                 user.getId(),
                 user.getUserName(),
+                null,
                 user.getEmail()
         );
     }
