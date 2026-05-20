@@ -1,4 +1,5 @@
 package com.project.ecommerce.config;
+import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -13,6 +14,7 @@ import java.util.List;
 public class SwaggerConfig {
     @Bean
     public OpenAPI customOpenAPI(){
+        final String securitySchemeName = "bearerAuth";
         Server server = new Server();
         server.setUrl("/");
         server.setDescription("Default Server URL");
@@ -22,18 +24,21 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("Ecommerce API")
                         .version("1.0")
-                        .description("Spring Boot Ecommerce APIs")
+                        .description("Enterprise Ecommerce Backend APIs with JWT Authentication")
+                        .contact(new Contact().name("Priyakant Kumar"))
                 )
                 .addSecurityItem(new SecurityRequirement()
-                                .addList("bearerAuth")
+                                .addList(securitySchemeName)
                 )
-                .components(new io.swagger.v3.oas.models.Components()
-                        .addSecuritySchemes("bearerAuth",
+                .components(
+                        new io.swagger.v3.oas.models.Components()
+                        .addSecuritySchemes(securitySchemeName,
                                 new SecurityScheme()
-                                        .name("bearerAuth")
+                                        .name(securitySchemeName)
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
+                                        .description("Enter JWT token with Bearer prefix")
                                 )
                 );
     }

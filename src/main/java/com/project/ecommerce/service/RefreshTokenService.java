@@ -58,7 +58,6 @@ public class RefreshTokenService {
         String accessToken = jwtService.generateToken(user);
         RefreshToken newRefreshToken = createRefreshToken(user);
 
-
         return new LoginResponseDTO(accessToken, newRefreshToken.getToken());
     }
 

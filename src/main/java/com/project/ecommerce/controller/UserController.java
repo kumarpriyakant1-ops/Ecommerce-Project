@@ -4,6 +4,8 @@ import com.project.ecommerce.dto.*;
 import com.project.ecommerce.service.EmailService;
 import com.project.ecommerce.service.RefreshTokenService;
 import com.project.ecommerce.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -13,6 +15,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
+@Tag(
+        name = "User APIs",
+        description = "User management, authentication, and security APIs"
+)
 public class UserController {
 
     @Autowired
@@ -25,6 +31,10 @@ public class UserController {
         this.refreshTokenService = refreshTokenService;
     }
 
+    @Operation(
+            summary = "Register User",
+            description = "Create new user account"
+    )
     @PostMapping("/signup")
     public ApiResponseDTO<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO){
         UserDTO saveUser = userService.saveUser(userDTO);
@@ -34,6 +44,10 @@ public class UserController {
         );
     }
 
+    @Operation(
+            summary = "Verify Email",
+            description = "Verify user email using verification token"
+    )
     @PostMapping("/verify-email")
     public ApiResponseDTO<String> verifyEmail(@Valid @RequestBody EmailVerificationRequestDTO requestDTO){
         userService.verifyEmail(requestDTO.getToken());
@@ -43,6 +57,10 @@ public class UserController {
         );
     }
 
+    @Operation(
+            summary = "Login User",
+            description = "Authenticate user and generate JWT token"
+    )
     @PostMapping("/login")
     public ApiResponseDTO<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO){
         LoginResponseDTO response = userService.login(loginRequestDTO);
@@ -52,6 +70,10 @@ public class UserController {
         );
     }
 
+    @Operation(
+            summary = "Logout User",
+            description = "Logout the user"
+    )
     @PostMapping("/logout")
     public ApiResponseDTO<RefreshTokenRequestDTO> logout(@Valid @RequestBody RefreshTokenRequestDTO token ){
         refreshTokenService.logout(token.getRefreshToken());
@@ -61,6 +83,10 @@ public class UserController {
         );
     }
 
+    @Operation(
+            summary = "Forgot Password",
+            description = "Send password reset email with reset token"
+    )
     @PostMapping("/forgot-password")
     public ApiResponseDTO<ForgotPasswordRequestDTO> forgotPassword(@RequestBody ForgotPasswordRequestDTO requestDTO){
         userService.forgotPassword(requestDTO);
@@ -69,7 +95,10 @@ public class UserController {
                 null
         );
     }
-
+    @Operation(
+            summary = "Reset Password",
+            description = "Reset user password using valid reset token"
+    )
     @PostMapping("/reset-password")
     public ApiResponseDTO<String> resetPassword(@RequestBody ResetPasswordRequestDTO request){
         userService.resetPassword(request.getToken(), request.getNewPassword());
@@ -79,6 +108,10 @@ public class UserController {
         );
     }
 
+    @Operation(
+            summary = "Refresh Token",
+            description = "Generate new access token using refresh token"
+    )
     @PostMapping("/refresh-token")
     public ApiResponseDTO<String> refreshToken(@RequestParam String refreshTokenValue){
         String accessToken = refreshTokenService.generateAccessToken(refreshTokenValue);
@@ -88,6 +121,10 @@ public class UserController {
         );
     }
 
+    @Operation(
+            summary = "Rotate Token",
+            description = "Generate new access token and refresh token using old refresh token"
+    )
     @PostMapping("/rotate-token")
     public ApiResponseDTO<LoginResponseDTO> rotateToken(@RequestParam String refreshTokenValue){
         LoginResponseDTO accessToken = refreshTokenService.rotateToken(refreshTokenValue);
@@ -96,6 +133,11 @@ public class UserController {
                 accessToken
         );
     }
+
+    @Operation(
+            summary = "Get User By ID",
+            description = "Fetch user details using user ID"
+    )
     @GetMapping("/{id}")
     public ApiResponseDTO<UserDTO> getUserById(@PathVariable Long id){
         UserDTO user = userService.getUserById(id);
@@ -105,6 +147,10 @@ public class UserController {
         );
     }
 
+    @Operation(
+            summary = "Update User",
+            description = "Update existing user details"
+    )
     @PutMapping("/update/{id}")
     public ApiResponseDTO<UserDTO> updateUser(@PathVariable Long id,
                                               @Valid @RequestBody UserDTO userDTO){
@@ -115,6 +161,10 @@ public class UserController {
         );
     }
 
+    @Operation(
+            summary = "Update User Partially",
+            description = "Update existing user partially"
+    )
     @PatchMapping("/{id}")
     public  ApiResponseDTO<UserDTO> updatedUserPartially(@PathVariable Long id,
                                                          @RequestBody UserDTO userDto){
@@ -125,6 +175,10 @@ public class UserController {
         );
     }
 
+    @Operation(
+            summary = "Delete User",
+            description = "Delete user account and related tokens"
+    )
     @DeleteMapping("/{id}")
     public ApiResponseDTO<String> deleteUser(@PathVariable Long id){
         userService.deleteUser(id);
@@ -134,6 +188,10 @@ public class UserController {
         );
     }
 
+    @Operation(
+            summary = "Get paginated users",
+            description = "Fetch users in a paginated format by providing page number and page size"
+    )
     @GetMapping("/paginated")
     public ApiResponseDTO<Page<UserDTO>> getPaginatedUsers(@RequestParam int page, @RequestParam int size){
         Page<UserDTO> user =  userService.getPaginatedUsers(page, size);
@@ -143,6 +201,10 @@ public class UserController {
         );
     }
 
+    @Operation(
+            summary = "Get sorted users with pagination",
+            description = "Fetch users with pagination and sorting based on a given field (e.g., userName, email, createdAt)"
+    )
     @GetMapping("/sorted")
     public ApiResponseDTO<Page<UserDTO>> getUsersSorted(@RequestParam int page,
                                         @RequestParam int size, @RequestParam String sortBy){
@@ -154,6 +216,10 @@ public class UserController {
 
     }
 
+    @Operation(
+            summary = "Search Users",
+            description = "Search users by username"
+    )
     @GetMapping("/search")
     public ApiResponseDTO<List<UserDTO>> searchUserByName(@RequestParam String name){
         List<UserDTO> users = userService.searchUserByName(name);
@@ -169,6 +235,10 @@ public class UserController {
         );
     }
 
+    @Operation(
+            summary = "Search Users",
+            description = "Search users by username or email"
+    )
     @GetMapping("/findByEmailAndUserName")
     public ApiResponseDTO<List<UserDTO>> findByEmailAndUserName(@RequestParam String name, @RequestParam String email){
         List<UserDTO> users =  userService.findByEmailAndUserName(name, email);

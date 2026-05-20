@@ -3,6 +3,8 @@ package com.project.ecommerce.controller;
 import com.project.ecommerce.dto.ApiResponseDTO;
 import com.project.ecommerce.dto.OrderDTO;
 import com.project.ecommerce.service.OrderService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
+@Tag(
+        name = "Order APIs",
+        description = "Order management"
+)
 public class OrderController {
 
     private final OrderService orderService;
@@ -18,6 +24,10 @@ public class OrderController {
         this.orderService = orderService;
     }
 
+    @Operation(
+            summary = "Create order for a user",
+            description = "Create a new order for a specific user using userId and order details"
+    )
     @PostMapping("/user/{userId}")
     public ApiResponseDTO<OrderDTO>  createOrder(@PathVariable Long userId,
                                                  @RequestBody OrderDTO orderDTO){
@@ -28,6 +38,10 @@ public class OrderController {
         );
     }
 
+    @Operation(
+            summary = "Get order by ID",
+            description = "Fetch a single order using its unique ID"
+    )
     @GetMapping("/{id}")
     public ApiResponseDTO<OrderDTO> getOrderById(@PathVariable Long id){
         OrderDTO order = orderService.getOrderById(id);
@@ -37,6 +51,10 @@ public class OrderController {
         );
     }
 
+    @Operation(
+            summary = "Update order",
+            description = "Update an existing order using order ID and new order details"
+    )
     @PutMapping("{id}")
     public ApiResponseDTO<OrderDTO> updateOrder(@PathVariable Long id,
                                                 @Valid @RequestBody OrderDTO orderDTO){
@@ -47,7 +65,10 @@ public class OrderController {
         );
     }
 
-
+    @Operation(
+            summary = "Get orders by price filter",
+            description = "Fetch all orders where order price is greater than given value"
+    )
     @GetMapping("/search/byPriceGreaterThan")
     public ApiResponseDTO<List<OrderDTO>> getOrdersByPriceGreaterThan(@RequestParam Double price){
         List<OrderDTO> orders = orderService.getOrdersByPriceGreaterThan(price);
@@ -63,6 +84,10 @@ public class OrderController {
         );
     }
 
+    @Operation(
+            summary = "Get orders by product name",
+            description = "Fetch orders based on product name"
+    )
     @GetMapping("/search/by-product")
     public ApiResponseDTO<List<OrderDTO>> getOrdersByProductName(@RequestParam String product){
         List<OrderDTO> orders = orderService.getOrdersByProductName(product);
@@ -78,6 +103,10 @@ public class OrderController {
         );
      }
 
+    @Operation(
+            summary = "Get paginated orders",
+            description = "Fetch orders in paginated format using page number and size"
+    )
     @GetMapping("/")
     public ApiResponseDTO<Page<OrderDTO>> getPaginatedOrders(@RequestParam(defaultValue = "0") int page,
                                                            @RequestParam(defaultValue = "5") int size){
@@ -89,6 +118,10 @@ public class OrderController {
        );
     }
 
+    @Operation(
+            summary = "Get sorted orders",
+            description = "Fetch all orders sorted by a given field (e.g., price, date, status)"
+    )
     @GetMapping("/sorted")
     public ApiResponseDTO<List<OrderDTO>> getSortedOrders(@RequestParam String sortBy){
         List<OrderDTO> order =orderService.getSortedOrders(sortBy);
@@ -97,6 +130,11 @@ public class OrderController {
                 order
         );
     }
+
+    @Operation(
+            summary = "Delete order",
+            description = "Delete an order by its ID"
+    )
     @DeleteMapping("/{id}")
     public ApiResponseDTO<String> deleteOrder(@PathVariable Long id){
         orderService.deleteOrder(id);
