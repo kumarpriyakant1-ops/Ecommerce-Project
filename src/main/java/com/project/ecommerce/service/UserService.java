@@ -1,10 +1,13 @@
 package com.project.ecommerce.service;
+import com.project.ecommerce.dto.ForgotPasswordRequestDTO;
 import com.project.ecommerce.dto.LoginRequestDTO;
 import com.project.ecommerce.dto.LoginResponseDTO;
 import com.project.ecommerce.dto.UserDTO;
+import com.project.ecommerce.entity.PasswordResetToken;
 import com.project.ecommerce.entity.RefreshToken;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.enums.Role;
+import com.project.ecommerce.repository.PasswordResetTokenRepository;
 import com.project.ecommerce.repository.UserRepository;
 import com.project.ecommerce.security.JwtService;
 import org.slf4j.Logger;
@@ -17,7 +20,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,15 +33,17 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     @Autowired
     private EmailService emailService;
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
-    public UserService(JwtService jwtService, UserRepository userRepository, PasswordEncoder passwordEncoder, RefreshTokenService refreshTokenService) {
+    public UserService(JwtService jwtService, UserRepository userRepository, PasswordEncoder passwordEncoder, RefreshTokenService refreshTokenService, PasswordResetTokenRepository passwordResetTokenRepository) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.refreshTokenService = refreshTokenService;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
     public UserDTO saveUser(UserDTO userDTO) {
@@ -103,6 +111,77 @@ public class UserService {
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
         logger.debug("Refresh token generated successfully");
         return new LoginResponseDTO(accessToken, refreshToken.getToken());
+    }
+
+    public void forgotPassword(ForgotPasswordRequestDTO requestDTO) {
+        logger.info("Forgot password request for email: {}", requestDTO.getEmail());
+        User user = userRepository.findByEmail(requestDTO.getEmail())
+                .orElseThrow(() -> {
+                    logger.error("User not found with email: {}", requestDTO.getEmail());
+                    return new RuntimeException("User not found with email: " +requestDTO.getEmail());
+                });
+
+        String token = UUID.randomUUID().toString();
+        PasswordResetToken passwordResetToken = new PasswordResetToken();
+        passwordResetToken.setToken(token);
+        passwordResetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15));
+        passwordResetToken.setUser(user);
+        passwordResetTokenRepository.save(passwordResetToken);
+
+        String resetLink = "http://localhost:8080/api/users/reset-password?token=" + token;
+
+        String emailBody = String.format("""
+            
+            Dear %s,
+            
+            We received a request to reset your password.
+            
+            Please click the link below to reset your password:
+            
+            %s
+            
+            This link will expire in 15 minutes.
+            
+            If you did not request this, please ignore this email.
+            
+            Regards,
+            Ecommerce Platform Team
+            """,
+
+                user.getUserName(),
+                resetLink
+        );
+
+        try{
+            emailService.sendMail(
+                    user.getEmail(),
+                    "Reset your password",
+                    emailBody
+            );
+        }catch(Exception ex){
+            logger.error("Failed to send reset email {}", ex.getMessage());
+
+        }
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        logger.info("Reset password request received");
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> {
+                    logger.error("Invalid reset token");
+                    return new RuntimeException("Invalid reset token");
+                });
+
+        if(resetToken.getExpiryDate().isBefore(LocalDateTime.now())){
+            logger.error("Reset token got expired");
+            throw new RuntimeException("Reset token got expired");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        passwordResetTokenRepository.delete(resetToken);
+        logger.info("Password reset successful for {}", user.getEmail());
     }
 
     private UserDTO mapToDTO(User  user){

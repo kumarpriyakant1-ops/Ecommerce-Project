@@ -52,6 +52,24 @@ public class UserController {
         );
     }
 
+    @PostMapping("/forgot-password")
+    public ApiResponseDTO<ForgotPasswordRequestDTO> forgotPassword(@RequestBody ForgotPasswordRequestDTO requestDTO){
+        userService.forgotPassword(requestDTO);
+        return new ApiResponseDTO<>(
+                "Reset Email sent",
+                null
+        );
+    }
+
+    @PostMapping("/reset-password")
+    public ApiResponseDTO<String> resetPassword(@RequestBody ResetPasswordRequestDTO request){
+        userService.resetPassword(request.getToken(), request.getNewPassword());
+        return new ApiResponseDTO<>(
+                "Password reset successful",
+                null
+        );
+    }
+
     @GetMapping("/send-mail")
     public ApiResponseDTO<String> sendEmail(@RequestParam String sentTo){
         emailService.sendMail(
