@@ -34,6 +34,15 @@ public class UserController {
         );
     }
 
+    @PostMapping("/verify-email")
+    public ApiResponseDTO<String> verifyEmail(@Valid @RequestBody EmailVerificationRequestDTO requestDTO){
+        userService.verifyEmail(requestDTO.getToken());
+        return new ApiResponseDTO<>(
+                "Email verified successfully",
+                null
+        );
+    }
+
     @PostMapping("/login")
     public ApiResponseDTO<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO){
         LoginResponseDTO response = userService.login(loginRequestDTO);
@@ -66,26 +75,6 @@ public class UserController {
         userService.resetPassword(request.getToken(), request.getNewPassword());
         return new ApiResponseDTO<>(
                 "Password reset successful",
-                null
-        );
-    }
-
-    @GetMapping("/send-mail")
-    public ApiResponseDTO<String> sendEmail(@RequestParam String sentTo){
-        emailService.sendMail(
-                sentTo,
-                "Testing Mail Integration",
-                """
-                        Hi,
-                        
-                        Spring Boot Email is working fine.
-                        
-                        Thanks & regards
-                        Priyakant Kumar            """
-        );
-
-        return new ApiResponseDTO<>(
-                "Email sent successfully",
                 null
         );
     }

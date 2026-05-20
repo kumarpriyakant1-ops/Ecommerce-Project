@@ -23,6 +23,8 @@ public class User {
 
     private String password;
 
+    private boolean isVerified = false;
+
     @Column(unique = true)
     private String email;
 

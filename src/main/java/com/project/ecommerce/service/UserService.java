@@ -3,13 +3,17 @@ import com.project.ecommerce.dto.ForgotPasswordRequestDTO;
 import com.project.ecommerce.dto.LoginRequestDTO;
 import com.project.ecommerce.dto.LoginResponseDTO;
 import com.project.ecommerce.dto.UserDTO;
+import com.project.ecommerce.entity.EmailVerificationToken;
 import com.project.ecommerce.entity.PasswordResetToken;
 import com.project.ecommerce.entity.RefreshToken;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.enums.Role;
+import com.project.ecommerce.repository.EmailVerificationTokenRepository;
 import com.project.ecommerce.repository.PasswordResetTokenRepository;
+import com.project.ecommerce.repository.RefreshTokenRepository;
 import com.project.ecommerce.repository.UserRepository;
 import com.project.ecommerce.security.JwtService;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,29 +38,106 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
-    @Autowired
-    private EmailService emailService;
+    private final EmailVerificationTokenRepository emailVerificationTokenRepository;
+    private final EmailService emailService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
-    public UserService(JwtService jwtService, UserRepository userRepository, PasswordEncoder passwordEncoder, RefreshTokenService refreshTokenService, PasswordResetTokenRepository passwordResetTokenRepository) {
+    public UserService(JwtService jwtService, UserRepository userRepository, PasswordEncoder passwordEncoder, RefreshTokenService refreshTokenService, PasswordResetTokenRepository passwordResetTokenRepository, EmailVerificationTokenRepository emailVerificationTokenRepository, EmailService emailService, RefreshTokenRepository refreshTokenRepository) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.refreshTokenService = refreshTokenService;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.emailVerificationTokenRepository = emailVerificationTokenRepository;
+        this.emailService = emailService;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     public UserDTO saveUser(UserDTO userDTO) {
+        if(userRepository.findByEmail(userDTO.getEmail()).isPresent()){
+            throw new RuntimeException("Email already registered");
+        }
         logger.info("Creating user with email: {}", userDTO.getEmail());
         User user = new User();
         user.setUserName(userDTO.getUserName());
         user.setEmail(userDTO.getEmail());
         user.setRole(Role.USER);
+        user.setVerified(false);
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        User saveUser = userRepository.save(user);
+        User savedUser = userRepository.save(user);
         logger.info("User created successfully {}", userDTO.getEmail());
+
+        //Generate Email Verification Token
+        String verificationToken = UUID.randomUUID().toString();
+        EmailVerificationToken emailVerificationToken = new EmailVerificationToken();
+        emailVerificationToken.setToken(verificationToken);
+        emailVerificationToken.setExpiryDate(LocalDateTime.now().plusDays(30));
+        emailVerificationToken.setUser(savedUser);
+        emailVerificationTokenRepository.save(emailVerificationToken);
+        // EMAIL VERIFICATION LINK
+        String emailVerificationLink = "http://localhost:8080/api/users/verify-email?token=" + verificationToken;
         try {
 
+            String emailBody = String.format("""
+
+                Dear %s,
+
+                Welcome to Ecommerce Platform!
+
+                Your account has been successfully registered.
+
+                Please verify your email using the link below:
+
+                %s
+
+                This verification link will expire in 24 hours.
+
+                For security reasons, do not share this link with anyone.
+
+                If you did not create this account, please ignore this email.
+
+                Best regards,
+                Ecommerce Platform Team
+                """,
+
+                    savedUser.getUserName(),
+                    emailVerificationLink
+            );
+
+            emailService.sendMail(
+                    savedUser.getEmail(),
+                    "Verify Your Ecommerce Account",
+                    emailBody
+            );
+            logger.info("Verification email sent successfully to {}", savedUser.getEmail());
+
+        } catch (Exception ex){
+            logger.error("Failed to send verification email: {}", ex.getMessage());
+        }
+        return mapToDTO(savedUser);
+    }
+
+    public void verifyEmail(String token) {
+        logger.info("Email verification initiated");
+        EmailVerificationToken emailVerificationToken = emailVerificationTokenRepository.findByToken(token)
+                .orElseThrow(() -> {
+                    logger.error( "Invalid verification token");
+                    return new RuntimeException( "Invalid verification token");
+                });
+
+        if(emailVerificationToken.getExpiryDate().isBefore(LocalDateTime.now())){
+            throw new RuntimeException("Verification token expired");
+        }
+
+        User user = emailVerificationToken.getUser();
+        user.setVerified(true);
+        userRepository.save(user);
+        emailVerificationTokenRepository.delete(emailVerificationToken);
+        logger.info("Email verified successfully for {}", user.getEmail());
+
+        //Send Welcome email
+        try {
             String emailBody = String.format("""
                 Dear %s,
 
@@ -76,20 +157,19 @@ public class UserService {
                 Ecommerce Platform Team
                 """,
 
-                    saveUser.getUserName()
+                    user.getUserName()
             );
             emailService.sendMail(
-                    saveUser.getEmail(),
+                    user.getEmail(),
                     "Welcome to Ecommerce Platform",
                     emailBody
             );
-            logger.info("Welcome email sent successfully to {}", saveUser.getEmail()
+            logger.info("Welcome email sent successfully to {}", user.getEmail()
             );
         } catch (Exception ex){
             logger.error("Failed to send welcome email: {}", ex.getMessage()
             );
         }
-        return mapToDTO(saveUser);
     }
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
         logger.info("Fetching User with Email: {}", loginRequestDTO.getEmail());
@@ -231,6 +311,7 @@ public class UserService {
         return mapToDTO(updatedUser);
     }
 
+    @Transactional
     public void deleteUser(Long id) {
         if (id < 0) {
             logger.warn("Id can not be negative {}", id);
@@ -241,6 +322,7 @@ public class UserService {
                     logger.error("User not found with id: {}", id);
                     return new RuntimeException("User not found with id: " + id);
                 });
+        refreshTokenRepository.deleteByUser(user);
         userRepository.delete(user);
         logger.info("User deleted successfully with id: {}", id);
 
