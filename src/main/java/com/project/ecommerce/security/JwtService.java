@@ -24,6 +24,7 @@ public class JwtService {
     private static final String SECRET_KEY = "myverysecuresecretkeymyverysecuresecretkey123";
     private final SecretKey key = Keys.hmacShaKeyFor(
                     SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+
     public String generateToken(User user){
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", user.getRole().name());

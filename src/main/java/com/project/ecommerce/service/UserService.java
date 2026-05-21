@@ -8,6 +8,7 @@ import com.project.ecommerce.entity.PasswordResetToken;
 import com.project.ecommerce.entity.RefreshToken;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.enums.Role;
+import com.project.ecommerce.exception.UserNotFoundException;
 import com.project.ecommerce.repository.EmailVerificationTokenRepository;
 import com.project.ecommerce.repository.PasswordResetTokenRepository;
 import com.project.ecommerce.repository.RefreshTokenRepository;
@@ -123,7 +124,7 @@ public class UserService {
         User user = userRepository.findByEmail(loginRequestDTO.getEmail())
                 .orElseThrow( () -> {
                     logger.error("User not found with Email: {}", loginRequestDTO.getEmail());
-                    return new RuntimeException("User not found with Email: " + loginRequestDTO.getEmail());
+                    return new UserNotFoundException("User not found with Email: " + loginRequestDTO.getEmail());
                 });
 
         boolean matches = passwordEncoder
@@ -145,7 +146,7 @@ public class UserService {
         User user = userRepository.findByEmail(requestDTO.getEmail())
                 .orElseThrow(() -> {
                     logger.error("User not found with email: {}", requestDTO.getEmail());
-                    return new RuntimeException("User not found with email: " +requestDTO.getEmail());
+                    return new UserNotFoundException("User not found with email: " +requestDTO.getEmail());
                 });
 
         String token = UUID.randomUUID().toString();
@@ -208,7 +209,7 @@ public class UserService {
         User user =  userRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("User not found with id: {}", id);
-                     return new RuntimeException("User not found with id: " + id);
+                     return new UserNotFoundException("User not found with id: " + id);
                 });
         logger.info("User fetched successfully with id: {}", id);
         return mapToDTO(user);
@@ -223,7 +224,7 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() ->{
                     logger.error("User not found for update with id: {}", id);
-                    return new RuntimeException("User not found with id: " + id);
+                    return new UserNotFoundException("User not found with id: " + id);
                 });
         user.setUserName(userDTO.getUserName());
         user.setEmail(userDTO.getEmail());
@@ -241,7 +242,7 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("User not found with id: {}", id);
-                    return new RuntimeException("User not found with id: " + id);
+                    return new UserNotFoundException("User not found with id: " + id);
                 });
         refreshTokenRepository.deleteByUser(user);
         userRepository.delete(user);
@@ -258,7 +259,7 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("User not found with id: {}", id);
-                    return new RuntimeException("User not found with id: " + id);
+                    return new UserNotFoundException("User not found with id: " + id);
                 });
         if(userDTO.getUserName()  != null){
             user.setUserName(userDTO.getUserName());
@@ -298,7 +299,7 @@ public class UserService {
         List<User> users = userRepository.findByUserNameContaining(name);
         if (users.isEmpty()){
             logger.error("No users found with name: {}", name);
-            throw new RuntimeException("No users found with name: " + name);
+            throw new UserNotFoundException("No users found with name: " + name);
         }
         logger.info("Users fetched successfully with name: {}", name);
         return users.stream()
@@ -311,7 +312,7 @@ public class UserService {
         List<User> users = userRepository.findByEmailAndUserName(email,name);
         if (users.isEmpty()){
             logger.error("No users found with Email and Name: {} {}", email, name);
-            throw new RuntimeException("No users found with Email and Name: " + email + name );
+            throw new UserNotFoundException("No users found with Email and Name: " + email + name );
         }
         return users.stream()
                 .map(this::mapToDTO)

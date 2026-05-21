@@ -90,4 +90,16 @@ public class GlobalExceptionHandler {
                 );
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleUserNotFound(UserNotFoundException ex) {
+
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                "USER_404",
+                List.of(ex.getMessage()),
+                HttpStatus.NOT_FOUND.value(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
 }

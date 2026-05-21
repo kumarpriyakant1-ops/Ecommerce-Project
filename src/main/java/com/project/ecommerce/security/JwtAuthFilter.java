@@ -35,10 +35,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         // TOKEN EXISTS
         if(authHeader != null && authHeader.startsWith("Bearer ")) {
-
             // REMOVE Bearer
             String token = authHeader.substring(7);
-
             String email = jwtService.extractEmail(token);
 
             // FETCH USER
